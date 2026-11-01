@@ -39,6 +39,17 @@
             gap: 0.75rem;
             margin-top: 1.5rem;
         }
+        .link-item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #fff;
+            border: 1px solid var(--sx-line);
+            border-radius: var(--sx-radius-sm);
+            padding: 0.5rem 0.75rem;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+        }
         .modal-overlay {
             display: none;
             position: fixed;
@@ -71,7 +82,7 @@
 
     <nav class="sx-nav">
         <div class="sx-cluster">
-            <span class="sx-pill sx-mono">Generator v1.0</span>
+            <span class="sx-pill sx-mono">Generator v2.0</span>
         </div>
         <div style="font-weight: 700; font-family: var(--sx-font-display); font-size: 0.9rem; text-align: center;" class="nav-title">
             Mu's Cover Letter Generator
@@ -92,7 +103,7 @@
                 <div class="sx-stack" style="gap: 1.25rem;">
                     <div class="sx-field">
                         <label class="sx-label">Your Full Name</label>
-                        <input type="text" id="input-name" class="sx-input" placeholder="e.g. Alex Morgan">
+                        <input type="text" id="input-name" class="sx-input" placeholder="e.g. Dewan Mukto" value="Dewan Mukto">
                     </div>
                     <div class="sx-field">
                         <label class="sx-label">Target Job Title</label>
@@ -106,13 +117,32 @@
                         <label class="sx-label">Job Location</label>
                         <input type="text" id="input-location" class="sx-input" placeholder="e.g. San Francisco, CA">
                     </div>
+                    
+                    <!-- Single-Choice Job Type -->
                     <div class="sx-field">
                         <label class="sx-label">Job Type</label>
-                        <select id="input-type" class="sx-select">
-                            <option value="Remote">Remote</option>
-                            <option value="On-site">On-site</option>
-                            <option value="Hybrid">Hybrid</option>
-                        </select>
+                        <div class="sx-cluster" style="gap: 0.5rem;" id="job-type-group">
+                            <button type="button" class="sx-btn sx-btn--primary job-type-btn" data-val="Remote" style="flex: 1; min-height: 42px; font-size: 0.8rem;">Remote</button>
+                            <button type="button" class="sx-btn sx-btn--secondary job-type-btn" data-val="Hybrid" style="flex: 1; min-height: 42px; font-size: 0.8rem;">Hybrid</button>
+                            <button type="button" class="sx-btn sx-btn--secondary job-type-btn" data-val="On-site" style="flex: 1; min-height: 42px; font-size: 0.8rem;">On-site</button>
+                        </div>
+                    </div>
+
+                    <div class="sx-field">
+                        <label class="sx-label">Years of Experience</label>
+                        <input type="text" id="input-exp" class="sx-input" placeholder="e.g. 3+ years">
+                    </div>
+                    <div class="sx-field">
+                        <label class="sx-label">Main Skills</label>
+                        <input type="text" id="input-skills" class="sx-input" placeholder="e.g. JavaScript, Python, System Architecture">
+                    </div>
+                    <div class="sx-field">
+                        <label class="sx-label">Portfolio Project Type (Optional)</label>
+                        <input type="text" id="input-project" class="sx-input" placeholder="e.g. an AI-powered SaaS platform">
+                    </div>
+                    <div class="sx-field">
+                        <label class="sx-label">Achievement (Optional)</label>
+                        <input type="text" id="input-achievement" class="sx-input" placeholder="e.g. scaling application performance by 40%">
                     </div>
                     <div class="sx-field">
                         <label class="sx-label">Recent Academic Degree</label>
@@ -121,6 +151,15 @@
                     <div class="sx-field">
                         <label class="sx-label">Institute Name</label>
                         <input type="text" id="input-institute" class="sx-input" placeholder="e.g. University of Technology">
+                    </div>
+
+                    <!-- Social / Professional Links Management -->
+                    <div class="sx-field" style="margin-top: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <label class="sx-label" style="margin: 0;">Professional Links & Websites</label>
+                            <button type="button" class="sx-btn sx-btn--secondary" id="add-link-btn" style="min-height: 32px; padding: 0.25rem 0.75rem; font-size: 0.75rem;">+ Add Link</button>
+                        </div>
+                        <div id="links-container"></div>
                     </div>
                 </div>
             </div>
@@ -144,12 +183,32 @@
         </div>
     </main>
 
+    <!-- Add Link Modal -->
+    <div class="modal-overlay" id="link-modal">
+        <div class="modal-box">
+            <h3 style="margin-bottom: 1rem; font-size: 1.5rem;">Add Link</h3>
+            <div class="sx-stack" style="gap: 1rem; margin-bottom: 1.5rem;">
+                <div class="sx-field">
+                    <label class="sx-label">Website / Link Name</label>
+                    <input type="text" id="modal-link-name" class="sx-input" placeholder="e.g. Portfolio website link">
+                </div>
+                <div class="sx-field">
+                    <label class="sx-label">URL</label>
+                    <input type="url" id="modal-link-url" class="sx-input" placeholder="https://...">
+                </div>
+            </div>
+            <div class="sx-cluster" style="justify-content: flex-end;">
+                <button class="sx-btn sx-btn--secondary" id="link-modal-cancel">Cancel</button>
+                <button class="sx-btn sx-btn--primary" id="link-modal-submit">Add Link</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Send Directly Modal -->
     <div class="modal-overlay" id="email-modal">
         <div class="modal-box">
             <h3 style="margin-bottom: 1rem; font-size: 1.5rem;">Direct Email Dispatch</h3>
-            <p class="sx-muted" style="font-size: 0.85rem; margin-bottom: 1.5rem;">Enter the recipient email address and subject line to launch your default mail app.</p>
-            
+            <p class="sx-muted" style="font-size: 0.85rem; margin-bottom: 1.5rem;">Enter recipient email and subject line to launch your default mail app.</p>
             <div class="sx-stack" style="gap: 1rem; margin-bottom: 1.5rem;">
                 <div class="sx-field">
                     <label class="sx-label">Recipient Email</label>
@@ -160,7 +219,6 @@
                     <input type="text" id="modal-subject" class="sx-input" placeholder="Application for [Job Title]">
                 </div>
             </div>
-
             <div class="sx-cluster" style="justify-content: flex-end;">
                 <button class="sx-btn sx-btn--secondary" id="modal-cancel">Cancel</button>
                 <button class="sx-btn sx-btn--primary" id="modal-submit">Launch Mail App</button>
@@ -176,7 +234,6 @@
     </footer>
 
     <script>
-        // Clock updater
         function updateClock() {
             const now = new Date();
             document.getElementById('time-display').textContent = now.toTimeString().split(' ')[0];
@@ -184,34 +241,87 @@
         setInterval(updateClock, 1000);
         updateClock();
 
+        let jobType = 'Remote';
         const fields = {
             name: document.getElementById('input-name'),
             title: document.getElementById('input-title'),
             company: document.getElementById('input-company'),
             location: document.getElementById('input-location'),
-            type: document.getElementById('input-type'),
+            exp: document.getElementById('input-exp'),
+            skills: document.getElementById('input-skills'),
+            project: document.getElementById('input-project'),
+            achievement: document.getElementById('input-achievement'),
             degree: document.getElementById('input-degree'),
             institute: document.getElementById('input-institute')
         };
 
+        // Preloaded default links as requested
+        let customLinks = [
+            { name: 'CV / Resume link', url: 'https://dewanmukto.github.io/resume_cs.pdf' },
+            { name: 'Portfolio website link', url: 'https://dewanmukto.github.io/' },
+            { name: 'GitHub profile link', url: 'https://github.com/dwmk' },
+            { name: 'LinkedIn profile link', url: 'https://www.linkedin.com/in/dewanmukto' }
+        ];
+
         const outputEl = document.getElementById('letter-output');
+        const linksContainer = document.getElementById('links-container');
+
+        function renderLinksList() {
+            linksContainer.innerHTML = customLinks.map((l, index) => `
+                <div class="link-item-row">
+                    <span style="font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px;" title="${l.name}">${l.name}</span>
+                    <button type="button" class="sx-btn sx-btn--secondary" style="min-height: 26px; padding: 0.15rem 0.5rem; font-size: 0.7rem;" onclick="removeLink(${index})">Remove</button>
+                </div>
+            `).join('');
+            updatePreview();
+        }
+
+        window.removeLink = function(index) {
+            customLinks.splice(index, 1);
+            renderLinksList();
+        }
+
+        // Job Type single-choice buttons
+        document.querySelectorAll('.job-type-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.job-type-btn').forEach(b => {
+                    b.classList.remove('sx-btn--primary');
+                    b.classList.add('sx-btn--secondary');
+                });
+                btn.classList.remove('sx-btn--secondary');
+                btn.classList.add('sx-btn--primary');
+                jobType = btn.dataset.val;
+                updatePreview();
+            });
+        });
 
         function generateLetterText() {
             const name = fields.name.value.trim() || '[Your Name]';
             const title = fields.title.value.trim() || '[Job Title]';
             const company = fields.company.value.trim() || '[Company Name]';
             const location = fields.location.value.trim() || '[Job Location]';
-            const type = fields.type.value;
+            const exp = fields.exp.value.trim() || '[X] years';
+            const skills = fields.skills.value.trim() || '[Key Skills]';
             const degree = fields.degree.value.trim() || '[Academic Degree]';
             const institute = fields.institute.value.trim() || '[Institute Name]';
+            const project = fields.project.value.trim();
+            const achievement = fields.achievement.value.trim();
+
+            let projectSentence = project ? ` In my portfolio, I recently built ${project}, which sharpened my technical execution and practical problem-solving capabilities.` : '';
+            let achievementSentence = achievement ? ` A notable milestone in my recent work has been ${achievement}, reflecting my strong dedication to impactful results.` : '';
+
+            let linksSection = '';
+            if (customLinks.length > 0) {
+                linksSection = '\n\nHere are my relevant links and websites:\n' + customLinks.map(l => `- ${l.name}: ${l.url}`).join('\n');
+            }
 
             return `Dear Hiring Manager at ${company},
 
-I am thrilled to express my enthusiastic interest in the ${title} position at ${company}, located in ${location} (${type}). Having recently graduated with a ${degree} from ${institute}, I am deeply inspired by ${company}'s vision, culture, and relentless commitment to excellence.
+I am thrilled to express my enthusiastic interest in the ${title} position at ${company}, located in ${location} (${jobType}). With ${exp} of experience specializing in ${skills} and a recent ${degree} from ${institute}, I am deeply inspired by ${company}'s vision, culture, and relentless commitment to excellence.${projectSentence}${achievementSentence}
 
-My academic journey has equipped me with a rigorous foundation, unwavering dedication, and a profound passion for solving complex challenges. I am eager to channel this drive into your team, bringing fresh perspectives, proactive execution, and a genuine eagerness to contribute meaningfully from day one.
+My professional and academic journey has equipped me with a rigorous foundation, unwavering dedication, and a profound passion for solving complex challenges. I am eager to channel this drive into your team, bringing fresh perspectives, proactive execution, and a genuine eagerness to contribute meaningfully from day one.${linksSection}
 
-Thank you for your time and consideration. I would welcome the opportunity to discuss how my dedication and background align with the goals of ${company}.
+Thank you for your time and consideration. I would welcome the opportunity to discuss how my background and dedication align with the goals of ${company}.
 
 Warm regards,
 ${name}`;
@@ -224,6 +334,30 @@ ${name}`;
         Object.values(fields).forEach(el => {
             el.addEventListener('input', updatePreview);
             el.addEventListener('change', updatePreview);
+        });
+
+        // Add link modal logic
+        const linkModal = document.getElementById('link-modal');
+        document.getElementById('add-link-btn').addEventListener('click', () => {
+            document.getElementById('modal-link-name').value = '';
+            document.getElementById('modal-link-url').value = '';
+            linkModal.classList.add('active');
+        });
+
+        document.getElementById('link-modal-cancel').addEventListener('click', () => {
+            linkModal.classList.remove('active');
+        });
+
+        document.getElementById('link-modal-submit').addEventListener('click', () => {
+            const name = document.getElementById('modal-link-name').value.trim();
+            const url = document.getElementById('modal-link-url').value.trim();
+            if (!name || !url) {
+                alert('Please enter both name and URL.');
+                return;
+            }
+            customLinks.push({ name, url });
+            linkModal.classList.remove('active');
+            renderLinksList();
         });
 
         // Copy Text
@@ -246,7 +380,7 @@ ${name}`;
             URL.revokeObjectURL(url);
         });
 
-        // Download DOC (Word compatible HTML blob)
+        // Download DOC
         document.getElementById('download-doc-btn').addEventListener('click', () => {
             const text = generateLetterText().replace(/\n/g, '<br>');
             const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Cover Letter</title></head><body style="font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.6; padding: 20px;">${text}</body></html>`;
@@ -259,7 +393,7 @@ ${name}`;
             URL.revokeObjectURL(url);
         });
 
-        // Download PDF via print window
+        // Download PDF
         document.getElementById('download-pdf-btn').addEventListener('click', () => {
             const printWin = window.open('', '_blank');
             printWin.document.write(`<html><head><title>Cover Letter</title><style>body { font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.8; padding: 40px; color: #000; white-space: pre-wrap; }</style></head><body>${generateLetterText()}</body></html>`);
@@ -268,17 +402,17 @@ ${name}`;
             setTimeout(() => { printWin.print(); printWin.close(); }, 500);
         });
 
-        // Send Directly Modal triggers
-        const modal = document.getElementById('email-modal');
+        // Send Directly Modal
+        const emailModal = document.getElementById('email-modal');
         document.getElementById('send-direct-btn').addEventListener('click', () => {
             const title = fields.title.value.trim() || 'Job Position';
             const company = fields.company.value.trim() || 'Company';
             document.getElementById('modal-subject').value = `Application for ${title} at ${company}`;
-            modal.classList.add('active');
+            emailModal.classList.add('active');
         });
 
         document.getElementById('modal-cancel').addEventListener('click', () => {
-            modal.classList.remove('active');
+            emailModal.classList.remove('active');
         });
 
         document.getElementById('modal-submit').addEventListener('click', () => {
@@ -293,17 +427,28 @@ ${name}`;
 
             const mailtoUrl = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
             window.location.href = mailtoUrl;
-            modal.classList.remove('active');
+            emailModal.classList.remove('active');
         });
 
         // Reset
         document.getElementById('reset-btn').addEventListener('click', () => {
             Object.values(fields).forEach(el => el.value = '');
-            fields.type.value = 'Remote';
-            updatePreview();
+            fields.name.value = 'Dewan Mukto';
+            jobType = 'Remote';
+            document.querySelectorAll('.job-type-btn').forEach((b, idx) => {
+                b.classList.toggle('sx-btn--primary', idx === 0);
+                b.classList.toggle('sx-btn--secondary', idx !== 0);
+            });
+            customLinks = [
+                { name: 'CV / Resume link', url: 'https://dewanmukto.github.io/resume_cs.pdf' },
+                { name: 'Portfolio website link', url: 'https://dewanmukto.github.io/' },
+                { name: 'GitHub profile link', url: 'https://github.com/dwmk' },
+                { name: 'LinkedIn profile link', url: 'https://www.linkedin.com/in/dewanmukto' }
+            ];
+            renderLinksList();
         });
 
-        updatePreview();
+        renderLinksList();
     </script>
 </body>
 </html>
