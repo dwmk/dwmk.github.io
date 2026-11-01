@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub License Chooser</title>
+    <link rel="stylesheet" href="samx-theme.css">
+    <style>
+        .question-card {
+            margin-bottom: 1.5rem;
+        }
+        .scale-options {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        .scale-btn {
+            padding: 0.75rem 0.5rem;
+            border: 1px solid var(--sx-line-strong);
+            background: #fff;
+            border-radius: var(--sx-radius-sm);
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all var(--sx-duration) var(--sx-ease);
+        }
+        .scale-btn.active {
+            background: #000;
+            color: #fff;
+            border-color: #000;
+        }
+        .yes-no-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+        }
+        .yes-no-btn {
+            padding: 0.75rem;
+            border: 1px solid var(--sx-line-strong);
+            background: #fff;
+            border-radius: var(--sx-radius-sm);
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all var(--sx-duration) var(--sx-ease);
+        }
+        .yes-no-btn.active {
+            background: #000;
+            color: #fff;
+            border-color: #000;
+        }
+        pre {
+            background: var(--sx-soft);
+            padding: 1rem;
+            border-radius: var(--sx-radius-sm);
+            overflow-x: auto;
+            font-size: 0.8rem;
+            max-height: 320px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        @media (max-width: 520px) {
+            .nav-title { display: none; }
+        }
+    </style>
+</head>
+<body class="samx-theme">
+
+    <nav class="sx-nav">
+        <div class="sx-cluster">
+            <span class="sx-pill sx-mono">License Advisor</span>
+        </div>
+        <div style="font-weight: 700; font-family: var(--sx-font-display); font-size: 0.9rem; text-align: center;" class="nav-title">
+            GitHub License Chooser
+        </div>
+        <div class="sx-cluster">
+            <button class="sx-btn sx-btn--secondary" id="reset-btn">Reset</button>
+        </div>
+    </nav>
+
+    <main class="sx-container sx-section">
+        <div class="sx-grid sx-grid--2" style="align-items: start;">
+            <!-- Questionnaire Panel -->
+            <div class="sx-panel">
+                <div class="sx-eyebrow" style="margin-bottom: 1rem;">Parameters</div>
+                <h2 class="sx-heading--section" style="font-size: 2rem; margin-bottom: 1.5rem;">Configure Rights</h2>
+
+                <!-- Q1 -->
+                <div class="question-card" data-q="commercial">
+                    <label class="sx-label">Do you allow commercial use of your code?</label>
+                    <div class="yes-no-group">
+                        <div class="yes-no-btn" data-val="yes">Yes</div>
+                        <div class="yes-no-btn" data-val="no">No</div>
+                    </div>
+                </div>
+
+                <!-- Q2 -->
+                <div class="question-card" data-q="modifications">
+                    <label class="sx-label">Are modifications and derivative works permitted?</label>
+                    <div class="yes-no-group">
+                        <div class="yes-no-btn" data-val="yes">Yes</div>
+                        <div class="yes-no-btn" data-val="no">No</div>
+                    </div>
+                </div>
+
+                <!-- Q3 -->
+                <div class="question-card" data-q="copyleft">
+                    <label class="sx-label">Copyleft strictness level (1 to 5):</label>
+                    <div class="scale-options" data-scale="copyleft">
+                        <div class="scale-btn" data-val="1">1</div>
+                        <div class="scale-btn" data-val="2">2</div>
+                        <div class="scale-btn" data-val="3">3</div>
+                        <div class="scale-btn" data-val="4">4</div>
+                        <div class="scale-btn" data-val="5">5</div>
+                    </div>
+                </div>
+
+                <!-- Q4 -->
+                <div class="question-card" data-q="patent">
+                    <label class="sx-label">Patent grant & protection requirements level (1 to 5):</label>
+                    <div class="scale-options" data-scale="patent">
+                        <div class="scale-btn" data-val="1">1</div>
+                        <div class="scale-btn" data-val="2">2</div>
+                        <div class="scale-btn" data-val="3">3</div>
+                        <div class="scale-btn" data-val="4">4</div>
+                        <div class="scale-btn" data-val="5">5</div>
+                    </div>
+                </div>
+
+                <!-- Q5 -->
+                <div class="question-card" data-q="liability">
+                    <label class="sx-label">Liability & warranty strictness level (1 to 5):</label>
+                    <div class="scale-options" data-scale="liability">
+                        <div class="scale-btn" data-val="1">1</div>
+                        <div class="scale-btn" data-val="2">2</div>
+                        <div class="scale-btn" data-val="3">3</div>
+                        <div class="scale-btn" data-val="4">4</div>
+                        <div class="scale-btn" data-val="5">5</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Panel -->
+            <div class="sx-panel sx-card--soft">
+                <div class="sx-eyebrow" style="margin-bottom: 1rem;">Recommendation</div>
+                <div id="result-container">
+                    <h3 id="license-title" style="margin-bottom: 0.5rem;">MIT License</h3>
+                    <p id="license-desc" class="sx-muted" style="margin-bottom: 1.5rem;"></p>
+                    
+                    <div class="sx-field" style="margin-bottom: 1.5rem;">
+                        <label class="sx-label">Permissions Summary</label>
+                        <div id="license-permissions" class="sx-cluster"></div>
+                    </div>
+
+                    <div class="sx-field">
+                        <label class="sx-label">Full License Text</label>
+                        <pre><code id="license-code"></code></pre>
+                    </div>
+
+                    <div class="sx-cluster" style="margin-top: 1.5rem;">
+                        <button class="sx-btn sx-btn--primary" id="copy-license-btn">Copy Full License Text</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="sx-footer">
+        <div class="sx-container" style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="sx-mono" id="time-display">00:00:00</span>
+            <span class="sx-mono">Made by <a href="https://dewanmukto.github.io/" target="_blank" rel="noopener" style="text-decoration: underline; color: var(--sx-fg);">Dewan Mukto</a></span>
+        </div>
+    </footer>
+
+    <script>
+        const state = {
+            commercial: 'yes',
+            modifications: 'yes',
+            copyleft: '1',
+            patent: '1',
+            liability: '1'
+        };
+
+        const licenses = {
+            mit: {
+                title: "MIT License",
+                desc: "A short and simple permissive license with conditions limiting liability and copyright notices.",
+                perms: ["Commercial use", "Modification", "Distribution", "Private use"],
+                code: `MIT License
+
+Copyright (c) 2026 Repository Owner
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.`
+            },
+            apache: {
+                title: "Apache License 2.0",
+                desc: "A permissive license whose conditions require preservation of copyright and license notices. Contributors provide an express grant of patent rights.",
+                perms: ["Commercial use", "Modification", "Distribution", "Patent use", "Trademark use"],
+                code: `Apache License
+Version 2.0, January 2004
+http://www.apache.org/licenses/
+
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+1. Definitions.
+"License" shall mean the terms and conditions for use, reproduction, and distribution as defined by Sections 1 through 9 of this document.
+"Licensor" shall mean the copyright owner or entity authorized by the copyright owner that is granting the License.
+"Legal Entity" shall mean the union of the acting entity and all other entities that control, are controlled by, or are under common control with that entity.
+"You" (or "Your") shall mean an individual or Legal Entity exercising permissions granted by this License.
+
+2. Grant of Copyright License. Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare Derivative Works of, publicly display, publicly perform, sublicense, and distribute the Work and such Derivative Works in Source or Object form.
+
+3. Grant of Patent License. Subject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable (except as stated in this section) patent license to make, have made, use, offer to sell, sell, import, and otherwise transfer the Work.`
+            },
+            gpl3: {
+                title: "GNU General Public License v3.0",
+                desc: "Permissions of this strong copyleft license are conditioned on making available complete source code of licensed works and modifications under the same license.",
+                perms: ["Commercial use", "Modification", "Distribution", "Copyleft", "Patent use"],
+                code: `GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+Everyone is permitted to copy and distribute verbatim copies of this license document, but changing it is not allowed.
+
+Preamble
+The GNU General Public License is a free, copyleft license for software and other kinds of works.
+The licenses for most software and other practical works are designed to take away your freedom to share and change the works. By contrast, the GNU General Public License is intended to guarantee your freedom to share and change all versions of a program--to make sure it remains free software for all its users.
+
+TERMS AND CONDITIONS
+0. Definitions.
+"This License" refers to version 3 of the GNU General Public License.
+"Copyright" also means copyright-like laws that apply to other kinds of works, such as semiconductor masks.
+"The Program" refers to any copyrightable work licensed under this License. Each licensee is addressed as "you".`
+            },
+            agpl3: {
+                title: "GNU Affero General Public License v3.0",
+                desc: "A strong copyleft license ensuring that if you run the modified program on a network and let users interact with it remotely, the complete source code must be made available.",
+                perms: ["Commercial use", "Modification", "Distribution", "Network copyleft", "Patent use"],
+                code: `GNU AFFERO GENERAL PUBLIC LICENSE
+Version 3, 19 November 2007
+
+Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+Everyone is permitted to copy and distribute verbatim copies of this license document, but changing it is not allowed.
+
+Preamble
+The GNU Affero General Public License is a free, copyleft license for software and other kinds of works, specifically designed to ensure cooperation with the community in the case of network server software.
+
+TERMS AND CONDITIONS
+0. Definitions.
+"This License" refers to version 3 of the GNU Affero General Public License.
+"The Program" refers to any copyrightable work licensed under this License.`
+            },
+            isc: {
+                title: "ISC License",
+                desc: "A permissive license functionally equivalent to the simplified BSD and MIT licenses, removing unnecessary legal phrasing.",
+                perms: ["Commercial use", "Modification", "Distribution", "Private use"],
+                code: `ISC License
+
+Copyright (c) 2026 Repository Owner
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.`
+            },
+            bsd3: {
+                title: "BSD 3-Clause License",
+                desc: "A permissive license that allows redistribution and use in source and binary forms, with or without modification, provided certain conditions are met.",
+                perms: ["Commercial use", "Modification", "Distribution", "Patent use"],
+                code: `BSD 3-Clause License
+
+Copyright (c) 2026 Repository Owner
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED.`
+            },
+            unlicense: {
+                title: "The Unlicense",
+                desc: "A license with no conditions whatsoever dedicated to the public domain. Unencumbered software for public use.",
+                perms: ["Public domain", "Commercial use", "Modification", "Distribution"],
+                code: `This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this commitment for the benefit
+of posterity to the public at large and to the detriment of our heirs
+and successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights to this
+software under copyright law.`
+            }
+        };
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('time-display').textContent = now.toTimeString().split(' ')[0];
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Setup Event Listeners
+        document.querySelectorAll('.yes-no-group').forEach(group => {
+            const parent = group.closest('.question-card');
+            const q = parent.dataset.q;
+            group.querySelectorAll('.yes-no-btn').forEach(btn => {
+                if (btn.dataset.val === state[q]) btn.classList.add('active');
+                btn.addEventListener('click', () => {
+                    group.querySelectorAll('.yes-no-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    state[q] = btn.dataset.val;
+                    calculateLicense();
+                });
+            });
+        });
+
+        document.querySelectorAll('.scale-options').forEach(scale => {
+            const q = scale.dataset.scale;
+            scale.querySelectorAll('.scale-btn').forEach(btn => {
+                if (btn.dataset.val === state[q]) btn.classList.add('active');
+                btn.addEventListener('click', () => {
+                    scale.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    state[q] = btn.dataset.val;
+                    calculateLicense();
+                });
+            });
+        });
+
+        function calculateLicense() {
+            let key = 'mit';
+            const copyleftVal = parseInt(state.copyleft);
+            const patentVal = parseInt(state.patent);
+
+            if (state.commercial === 'no') {
+                key = copyleftVal >= 4 ? 'agpl3' : 'gpl3';
+            } else if (copyleftVal === 5) {
+                key = 'agpl3';
+            } else if (copyleftVal >= 3) {
+                key = 'gpl3';
+            } else if (patentVal >= 3) {
+                key = 'apache';
+            } else if (patentVal === 2) {
+                key = 'bsd3';
+            } else if (copyleftVal === 1 && patentVal === 1 && state.modifications === 'yes') {
+                key = 'mit';
+            } else {
+                key = 'isc';
+            }
+
+            const lic = licenses[key];
+            document.getElementById('license-title').textContent = lic.title;
+            document.getElementById('license-desc').textContent = lic.desc;
+            document.getElementById('license-permissions').innerHTML = lic.perms.map(p => `<span class="sx-pill">${p}</span>`).join('');
+            document.getElementById('license-code').textContent = lic.code;
+        }
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            state.commercial = 'yes';
+            state.modifications = 'yes';
+            state.copyleft = '1';
+            state.patent = '1';
+            state.liability = '1';
+            document.querySelectorAll('.yes-no-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.val === 'yes');
+            });
+            document.querySelectorAll('.scale-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.val === '1');
+            });
+            calculateLicense();
+        });
+
+        document.getElementById('copy-license-btn').addEventListener('click', () => {
+            const text = document.getElementById('license-code').textContent;
+            navigator.clipboard.writeText(text);
+            const btn = document.getElementById('copy-license-btn');
+            const original = btn.textContent;
+            btn.textContent = 'Copied Full License Text';
+            setTimeout(() => { btn.textContent = original; }, 1200);
+        });
+
+        calculateLicense();
+    </script>
+</body>
+</html>
