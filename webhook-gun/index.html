@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mu's Webhook Gun</title>
+    <link rel="stylesheet" href="/samx-theme.css">
+    <style>
+        .gun-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        .action-panel {
+            position: sticky;
+            top: 5rem;
+            background: var(--sx-soft-2);
+            border: 1px solid var(--sx-line);
+            border-radius: var(--sx-radius-lg);
+            padding: 2.5rem;
+        }
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: var(--sx-radius-pill);
+            font-size: 0.85rem;
+            font-weight: 700;
+            background: var(--sx-soft);
+            color: var(--sx-muted);
+            margin-top: 1rem;
+        }
+        .status-indicator.fired { background: #fef9c3; color: #854d0e; }
+        .status-indicator.triggered { background: #dcfce7; color: #166534; }
+        .status-indicator.failed { background: #fee2e2; color: #991b1b; }
+        .status-indicator.unknown { background: #f3f4f6; color: #4b5563; }
+        
+        .payload-preview {
+            background: #fff;
+            border: 1px solid var(--sx-line);
+            border-radius: var(--sx-radius-md);
+            padding: 1.5rem;
+            font-family: var(--sx-font-display);
+            font-size: 0.85rem;
+            max-height: 280px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-top: 1rem;
+        }
+        @media (max-width: 960px) {
+            .gun-grid { grid-template-columns: 1fr; }
+            .action-panel { position: relative; top: 0; }
+            .nav-title { display: none; }
+        }
+    </style>
+</head>
+<body class="samx-theme">
+
+    <nav class="sx-nav">
+        <div class="sx-cluster">
+            <span class="sx-pill sx-mono">Webhook Gun v1.0</span>
+        </div>
+        <div style="font-weight: 700; font-family: var(--sx-font-display); font-size: 0.9rem; text-align: center;" class="nav-title">
+            Mu's Webhook Gun
+        </div>
+        <div class="sx-cluster">
+            <button class="sx-btn sx-btn--secondary" id="reset-btn">Reset Form</button>
+        </div>
+    </nav>
+
+    <main class="sx-container sx-section">
+        <div class="gun-grid">
+            
+            <!-- Left: Configuration Form -->
+            <div class="sx-panel">
+                <div class="sx-eyebrow" style="margin-bottom: 1rem;">Transmitter</div>
+                <h2 class="sx-heading--section" style="font-size: 2rem; margin-bottom: 1.5rem;">Configure Payload</h2>
+
+                <div class="sx-stack" style="gap: 1.25rem;">
+                    <div class="sx-field">
+                        <label class="sx-label">Webhook URL (Discord, Slack, or Custom)</label>
+                        <input type="url" id="webhook-url" class="sx-input" placeholder="https://discord.com/api/webhooks/..." value="">
+                    </div>
+
+                    <div class="sx-field">
+                        <label class="sx-label">Preset Templates</label>
+                        <div class="sx-cluster" style="gap: 0.5rem;">
+                            <button type="button" class="sx-btn sx-btn--secondary" id="preset-discord" style="flex: 1; min-height: 38px; font-size: 0.75rem;">Discord JSON</button>
+                            <button type="button" class="sx-btn sx-btn--secondary" id="preset-slack" style="flex: 1; min-height: 38px; font-size: 0.75rem;">Slack JSON</button>
+                            <button type="button" class="sx-btn sx-btn--secondary" id="preset-custom" style="flex: 1; min-height: 38px; font-size: 0.75rem;">Plain Text</button>
+                        </div>
+                    </div>
+
+                    <div class="sx-field">
+                        <label class="sx-label">Payload Body (JSON or Text)</label>
+                        <textarea id="webhook-body" class="sx-textarea" placeholder='{"content": "Hello via Webhook Gun!"}'></textarea>
+                    </div>
+
+                    <div class="sx-field">
+                        <label class="sx-label">File / Image / Attachment (Optional)</label>
+                        <input type="file" id="webhook-file" class="sx-input" style="padding: 0.5rem;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Fire & Status Panel -->
+            <div class="action-panel">
+                <div class="sx-eyebrow" style="margin-bottom: 1rem;">Execution Control</div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Signal Dispatcher</h3>
+                
+                <button class="sx-btn sx-btn--primary" id="fire-btn" style="width: 100%; min-height: 56px; font-size: 1.1rem; justify-content: center;">Fire! 🚀</button>
+
+                <div style="margin-top: 1.5rem;">
+                    <label class="sx-label">Status Report</label>
+                    <div id="status-badge" class="status-indicator unknown">Status: Ready to Fire</div>
+                </div>
+
+                <div style="margin-top: 1.5rem;">
+                    <label class="sx-label">Live Payload Preview</label>
+                    <div class="payload-preview" id="payload-preview">No payload structured yet.</div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="sx-footer">
+        <div class="sx-container" style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="sx-mono" id="time-display">00:00:00</span>
+            <span class="sx-mono">Made by <a href="https://dewanmukto.github.io/" target="_blank" rel="noopener" style="text-decoration: underline; color: var(--sx-fg);">Dewan Mukto</a></span>
+        </div>
+    </footer>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('time-display').textContent = now.toTimeString().split(' ')[0];
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        const urlInput = document.getElementById('webhook-url');
+        const bodyInput = document.getElementById('webhook-body');
+        const fileInput = document.getElementById('webhook-file');
+        const fireBtn = document.getElementById('fire-btn');
+        const statusBadge = document.getElementById('status-badge');
+        const previewEl = document.getElementById('payload-preview');
+
+        // Persistent storage
+        function loadStorage() {
+            const saved = localStorage.getItem('mus_webhook_gun_data');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed.url) urlInput.value = parsed.url;
+                    if (parsed.body) bodyInput.value = parsed.body;
+                } catch(e) {}
+            }
+        }
+
+        function saveStorage() {
+            localStorage.setItem('mus_webhook_gun_data', JSON.stringify({
+                url: urlInput.value,
+                body: bodyInput.value
+            }));
+        }
+
+        function updatePreview() {
+            const text = bodyInput.value;
+            const hasFile = fileInput.files.length > 0;
+            let previewText = text;
+            if (hasFile) {
+                previewText += `\n[Attached File: ${fileInput.files[0].name} (${Math.round(fileInput.files[0].size / 1024)} KB)]`;
+            }
+            previewEl.textContent = previewText || 'No payload structured yet.';
+            saveStorage();
+        }
+
+        urlInput.addEventListener('input', saveStorage);
+        bodyInput.addEventListener('input', updatePreview);
+        fileInput.addEventListener('change', updatePreview);
+
+        // Presets
+        document.getElementById('preset-discord').addEventListener('click', () => {
+            bodyInput.value = JSON.stringify({ content: "Testing webhook signal via Mu's Webhook Gun 🚀", username: "Webhook Gun" }, null, 2);
+            updatePreview();
+        });
+
+        document.getElementById('preset-slack').addEventListener('click', () => {
+            bodyInput.value = JSON.stringify({ text: "Testing webhook signal via Mu's Webhook Gun 🚀" }, null, 2);
+            updatePreview();
+        });
+
+        document.getElementById('preset-custom').addEventListener('click', () => {
+            bodyInput.value = "Custom plain text webhook payload message.";
+            updatePreview();
+        });
+
+        // Fire Action
+        fireBtn.addEventListener('click', async () => {
+            const url = urlInput.value.trim();
+            const bodyContent = bodyInput.value.trim();
+            const file = fileInput.files[0];
+
+            if (!url) {
+                alert('Please enter a valid webhook URL.');
+                statusBadge.className = 'status-indicator failed';
+                statusBadge.textContent = 'Status: Failed (Missing URL)';
+                return;
+            }
+
+            statusBadge.className = 'status-indicator fired';
+            statusBadge.textContent = 'Status: Fired (Sending...)';
+            fireBtn.disabled = true;
+
+            try {
+                let response;
+                if (file) {
+                    const formData = new FormData();
+                    formData.append('payload_json', bodyContent);
+                    formData.append('file', file);
+                    response = await fetch(url, {
+                        method: 'POST',
+                        body: formData
+                    });
+                } else {
+                    // Check if JSON
+                    let isJson = false;
+                    let payloadData = bodyContent;
+                    try {
+                        payloadData = JSON.parse(bodyContent);
+                        isJson = true;
+                    } catch(e) {}
+
+                    response = await fetch(url, {
+                        method: 'POST',
+                        headers: isJson ? { 'Content-Type': 'application/json' } : { 'Content-Type': 'text/plain' },
+                        body: isJson ? JSON.stringify(payloadData) : bodyContent
+                    });
+                }
+
+                if (response.ok || response.type === 'opaque' || response.status === 204 || response.status === 200) {
+                    statusBadge.className = 'status-indicator triggered';
+                    statusBadge.textContent = `Status: Triggered (HTTP ${response.status || 'OK'})`;
+                } else {
+                    statusBadge.className = 'status-indicator failed';
+                    statusBadge.textContent = `Status: Failed (HTTP ${response.status})`;
+                }
+            } catch (err) {
+                // If CORS blocks the response reading but request went through, handle gracefully
+                statusBadge.className = 'status-indicator triggered';
+                statusBadge.textContent = 'Status: Triggered (Sent / CORS Restricted)';
+            } finally {
+                fireBtn.disabled = false;
+            }
+        });
+
+        // Reset
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            localStorage.removeItem('mus_webhook_gun_data');
+            urlInput.value = '';
+            bodyInput.value = '';
+            fileInput.value = '';
+            statusBadge.className = 'status-indicator unknown';
+            statusBadge.textContent = 'Status: Ready to Fire';
+            updatePreview();
+        });
+
+        loadStorage();
+        updatePreview();
+    </script>
+</body>
+</html>
