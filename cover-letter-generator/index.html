@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mu's Cover Letter Generator</title>
+    <link rel="stylesheet" href="/samx-theme.css">
+    <style>
+        .generator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        .preview-panel {
+            position: sticky;
+            top: 5rem;
+            background: var(--sx-soft-2);
+            border: 1px solid var(--sx-line);
+            border-radius: var(--sx-radius-lg);
+            padding: 2.5rem;
+        }
+        .letter-preview {
+            background: #fff;
+            border: 1px solid var(--sx-line);
+            border-radius: var(--sx-radius-md);
+            padding: 2.5rem;
+            font-family: var(--sx-font-body);
+            font-size: 0.95rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            box-shadow: var(--sx-shadow-sm);
+            min-height: 420px;
+            color: var(--sx-fg);
+        }
+        .action-cluster {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: #fff;
+            border: 1px solid var(--sx-line-strong);
+            border-radius: var(--sx-radius-lg);
+            padding: 2rem;
+            width: min(90%, 480px);
+            box-shadow: var(--sx-shadow-lg);
+        }
+        @media (max-width: 960px) {
+            .generator-grid { grid-template-columns: 1fr; }
+            .preview-panel { position: relative; top: 0; }
+            .nav-title { display: none; }
+        }
+    </style>
+</head>
+<body class="samx-theme">
+
+    <nav class="sx-nav">
+        <div class="sx-cluster">
+            <span class="sx-pill sx-mono">Generator v1.0</span>
+        </div>
+        <div style="font-weight: 700; font-family: var(--sx-font-display); font-size: 0.9rem; text-align: center;" class="nav-title">
+            Mu's Cover Letter Generator
+        </div>
+        <div class="sx-cluster">
+            <button class="sx-btn sx-btn--secondary" id="reset-btn">Reset Form</button>
+        </div>
+    </nav>
+
+    <main class="sx-container sx-section">
+        <div class="generator-grid">
+            
+            <!-- Left: Control Parameters Form -->
+            <div class="sx-panel">
+                <div class="sx-eyebrow" style="margin-bottom: 1rem;">Parameters</div>
+                <h2 class="sx-heading--section" style="font-size: 2rem; margin-bottom: 1.5rem;">Configure Details</h2>
+
+                <div class="sx-stack" style="gap: 1.25rem;">
+                    <div class="sx-field">
+                        <label class="sx-label">Your Full Name</label>
+                        <input type="text" id="input-name" class="sx-input" placeholder="e.g. Alex Morgan">
+                    </div>
+                    <div class="sx-field">
+                        <label class="sx-label">Target Job Title</label>
+                        <input type="text" id="input-title" class="sx-input" placeholder="e.g. Software Engineer">
+                    </div>
+                    <div class="sx-field">
+                        <label class="sx-label">Company Name</label>
+                        <input type="text" id="input-company" class="sx-input" placeholder="e.g. Acme Corp">
+                    </div>
+                    <div class="sx-field">
+                        <label class="sx-label">Job Location</label>
+                        <input type="text" id="input-location" class="sx-input" placeholder="e.g. San Francisco, CA">
+                    </div>
+                    <div class="sx-field">
+                        <label class="sx-label">Job Type</label>
+                        <select id="input-type" class="sx-select">
+                            <option value="Remote">Remote</option>
+                            <option value="On-site">On-site</option>
+                            <option value="Hybrid">Hybrid</option>
+                        </select>
+                    </div>
+                    <div class="sx-field">
+                        <label class="sx-label">Recent Academic Degree</label>
+                        <input type="text" id="input-degree" class="sx-input" placeholder="e.g. B.Sc. in Computer Science">
+                    </div>
+                    <div class="sx-field">
+                        <label class="sx-label">Institute Name</label>
+                        <input type="text" id="input-institute" class="sx-input" placeholder="e.g. University of Technology">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Live Preview & Export Suite -->
+            <div class="preview-panel">
+                <div class="sx-eyebrow" style="margin-bottom: 1rem;">Live Output</div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Generated Letter</h3>
+                
+                <div class="letter-preview" id="letter-output">Loading template...</div>
+
+                <div class="action-cluster">
+                    <button class="sx-btn sx-btn--secondary" id="copy-btn">Copy Text</button>
+                    <button class="sx-btn sx-btn--secondary" id="download-txt-btn">Download TXT</button>
+                    <button class="sx-btn sx-btn--secondary" id="download-doc-btn">Download DOC</button>
+                    <button class="sx-btn sx-btn--secondary" id="download-pdf-btn">Download PDF</button>
+                    <button class="sx-btn sx-btn--primary" id="send-direct-btn" style="flex: 1; justify-content: center;">Send Directly</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Send Directly Modal -->
+    <div class="modal-overlay" id="email-modal">
+        <div class="modal-box">
+            <h3 style="margin-bottom: 1rem; font-size: 1.5rem;">Direct Email Dispatch</h3>
+            <p class="sx-muted" style="font-size: 0.85rem; margin-bottom: 1.5rem;">Enter the recipient email address and subject line to launch your default mail app.</p>
+            
+            <div class="sx-stack" style="gap: 1rem; margin-bottom: 1.5rem;">
+                <div class="sx-field">
+                    <label class="sx-label">Recipient Email</label>
+                    <input type="email" id="modal-email" class="sx-input" placeholder="hiring@company.com">
+                </div>
+                <div class="sx-field">
+                    <label class="sx-label">Email Subject</label>
+                    <input type="text" id="modal-subject" class="sx-input" placeholder="Application for [Job Title]">
+                </div>
+            </div>
+
+            <div class="sx-cluster" style="justify-content: flex-end;">
+                <button class="sx-btn sx-btn--secondary" id="modal-cancel">Cancel</button>
+                <button class="sx-btn sx-btn--primary" id="modal-submit">Launch Mail App</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="sx-footer">
+        <div class="sx-container" style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="sx-mono" id="time-display">00:00:00</span>
+            <span class="sx-mono">Made by <a href="https://dewanmukto.github.io/" target="_blank" rel="noopener" style="text-decoration: underline; color: var(--sx-fg);">Dewan Mukto</a></span>
+        </div>
+    </footer>
+
+    <script>
+        // Clock updater
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('time-display').textContent = now.toTimeString().split(' ')[0];
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        const fields = {
+            name: document.getElementById('input-name'),
+            title: document.getElementById('input-title'),
+            company: document.getElementById('input-company'),
+            location: document.getElementById('input-location'),
+            type: document.getElementById('input-type'),
+            degree: document.getElementById('input-degree'),
+            institute: document.getElementById('input-institute')
+        };
+
+        const outputEl = document.getElementById('letter-output');
+
+        function generateLetterText() {
+            const name = fields.name.value.trim() || '[Your Name]';
+            const title = fields.title.value.trim() || '[Job Title]';
+            const company = fields.company.value.trim() || '[Company Name]';
+            const location = fields.location.value.trim() || '[Job Location]';
+            const type = fields.type.value;
+            const degree = fields.degree.value.trim() || '[Academic Degree]';
+            const institute = fields.institute.value.trim() || '[Institute Name]';
+
+            return `Dear Hiring Manager at ${company},
+
+I am thrilled to express my enthusiastic interest in the ${title} position at ${company}, located in ${location} (${type}). Having recently graduated with a ${degree} from ${institute}, I am deeply inspired by ${company}'s vision, culture, and relentless commitment to excellence.
+
+My academic journey has equipped me with a rigorous foundation, unwavering dedication, and a profound passion for solving complex challenges. I am eager to channel this drive into your team, bringing fresh perspectives, proactive execution, and a genuine eagerness to contribute meaningfully from day one.
+
+Thank you for your time and consideration. I would welcome the opportunity to discuss how my dedication and background align with the goals of ${company}.
+
+Warm regards,
+${name}`;
+        }
+
+        function updatePreview() {
+            outputEl.textContent = generateLetterText();
+        }
+
+        Object.values(fields).forEach(el => {
+            el.addEventListener('input', updatePreview);
+            el.addEventListener('change', updatePreview);
+        });
+
+        // Copy Text
+        document.getElementById('copy-btn').addEventListener('click', () => {
+            navigator.clipboard.writeText(generateLetterText());
+            const btn = document.getElementById('copy-btn');
+            const original = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = original; }, 1200);
+        });
+
+        // Download TXT
+        document.getElementById('download-txt-btn').addEventListener('click', () => {
+            const blob = new Blob([generateLetterText()], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Cover_Letter_${(fields.title.value.trim() || 'Application').replace(/\s+/g, '_')}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // Download DOC (Word compatible HTML blob)
+        document.getElementById('download-doc-btn').addEventListener('click', () => {
+            const text = generateLetterText().replace(/\n/g, '<br>');
+            const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Cover Letter</title></head><body style="font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.6; padding: 20px;">${text}</body></html>`;
+            const blob = new Blob(['\ufeff' + html], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Cover_Letter_${(fields.title.value.trim() || 'Application').replace(/\s+/g, '_')}.doc`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // Download PDF via print window
+        document.getElementById('download-pdf-btn').addEventListener('click', () => {
+            const printWin = window.open('', '_blank');
+            printWin.document.write(`<html><head><title>Cover Letter</title><style>body { font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.8; padding: 40px; color: #000; white-space: pre-wrap; }</style></head><body>${generateLetterText()}</body></html>`);
+            printWin.document.close();
+            printWin.focus();
+            setTimeout(() => { printWin.print(); printWin.close(); }, 500);
+        });
+
+        // Send Directly Modal triggers
+        const modal = document.getElementById('email-modal');
+        document.getElementById('send-direct-btn').addEventListener('click', () => {
+            const title = fields.title.value.trim() || 'Job Position';
+            const company = fields.company.value.trim() || 'Company';
+            document.getElementById('modal-subject').value = `Application for ${title} at ${company}`;
+            modal.classList.add('active');
+        });
+
+        document.getElementById('modal-cancel').addEventListener('click', () => {
+            modal.classList.remove('active');
+        });
+
+        document.getElementById('modal-submit').addEventListener('click', () => {
+            const email = document.getElementById('modal-email').value.trim();
+            const subject = document.getElementById('modal-subject').value.trim();
+            const body = generateLetterText();
+
+            if (!email) {
+                alert('Please enter a recipient email address.');
+                return;
+            }
+
+            const mailtoUrl = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.location.href = mailtoUrl;
+            modal.classList.remove('active');
+        });
+
+        // Reset
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            Object.values(fields).forEach(el => el.value = '');
+            fields.type.value = 'Remote';
+            updatePreview();
+        });
+
+        updatePreview();
+    </script>
+</body>
+</html>
