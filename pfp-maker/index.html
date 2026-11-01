@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mu's Pfp Maker</title>
+    <link rel="stylesheet" href="/samx-theme.css">
+    <style>
+        .pfp-workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        .canvas-preview-container {
+            position: sticky;
+            top: 5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--sx-soft-2);
+            border: 1px solid var(--sx-line);
+            border-radius: var(--sx-radius-lg);
+            padding: 2.5rem;
+        }
+        canvas {
+            max-width: 100%;
+            height: auto;
+            box-shadow: var(--sx-shadow-lg);
+            border-radius: var(--sx-radius-md);
+            cursor: grab;
+            touch-action: none;
+        }
+        canvas:active {
+            cursor: grabbing;
+        }
+        .controls-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .control-group {
+            background: #fff;
+            border: 1px solid var(--sx-line);
+            border-radius: var(--sx-radius-md);
+            padding: 1.5rem;
+        }
+        .control-group h3 {
+            font-size: 1.15rem;
+            margin-bottom: 1rem;
+        }
+        .slider-row {
+            display: grid;
+            grid-template-columns: 100px 1fr 50px;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .slider-row input[type="range"] {
+            width: 100%;
+            accent-color: #000;
+        }
+        .gradient-presets {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .gradient-chip {
+            height: 36px;
+            border-radius: var(--sx-radius-sm);
+            border: 1px solid var(--sx-line-strong);
+            cursor: pointer;
+            transition: transform var(--sx-duration) var(--sx-ease);
+        }
+        .gradient-chip:hover {
+            transform: scale(1.05);
+        }
+        .shape-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+        .shape-btn {
+            padding: 0.75rem;
+            text-align: center;
+            border: 1px solid var(--sx-line-strong);
+            background: #fff;
+            border-radius: var(--sx-radius-sm);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all var(--sx-duration) var(--sx-ease);
+        }
+        .shape-btn.active {
+            background: #000;
+            color: #fff;
+            border-color: #000;
+        }
+        @media (max-width: 960px) {
+            .pfp-workspace { grid-template-columns: 1fr; }
+            .canvas-preview-container { position: relative; top: 0; }
+            .nav-title { display: none; }
+        }
+    </style>
+</head>
+<body class="samx-theme">
+
+    <nav class="sx-nav">
+        <div class="sx-cluster">
+            <span class="sx-pill sx-mono">Studio v3.0</span>
+        </div>
+        <div style="font-weight: 700; font-family: var(--sx-font-display); font-size: 0.9rem; text-align: center;" class="nav-title">
+            Mu's Pfp Maker
+        </div>
+        <div class="sx-cluster">
+            <button class="sx-btn sx-btn--secondary" id="reset-btn">Reset All</button>
+            <button class="sx-btn sx-btn--primary" id="export-modal-btn">Export Image</button>
+        </div>
+    </nav>
+
+    <main class="sx-container sx-section">
+        <div class="pfp-workspace">
+            
+            <!-- Left: Interactive Canvas Preview -->
+            <div class="canvas-preview-container">
+                <div class="sx-eyebrow" style="margin-bottom: 1.5rem;">Real-time Viewport</div>
+                <div style="position: relative;">
+                    <canvas id="pfp-canvas" width="600" height="600"></canvas>
+                </div>
+                <div class="sx-muted" style="font-size: 0.75rem; margin-top: 1.25rem; text-align: center;">
+                    Drag image to pan &middot; Scroll to zoom
+                </div>
+            </div>
+
+            <!-- Right: Comprehensive Control Suite -->
+            <div class="controls-panel">
+                
+                <!-- 1. Upload & Image Transform -->
+                <div class="control-group">
+                    <h3>1. Image Source & Transform</h3>
+                    <div class="sx-field" style="margin-bottom: 1.25rem;">
+                        <label class="sx-label">Upload Image</label>
+                        <input type="file" id="image-upload" class="sx-input" accept="image/*" style="padding: 0.5rem;">
+                    </div>
+                    <div class="sx-cluster" style="margin-bottom: 1rem;">
+                        <button class="sx-btn sx-btn--secondary" id="remove-bg-btn" style="flex: 1; min-height: 38px; font-size: 0.8rem;">Auto Background Keying</button>
+                    </div>
+                    <div class="slider-row">
+                        <span>Zoom</span>
+                        <input type="range" id="zoom-slider" min="0.2" max="3" step="0.05" value="1">
+                        <span id="zoom-val" class="sx-mono">1.0x</span>
+                    </div>
+                    <div class="slider-row">
+                        <span>Rotation</span>
+                        <input type="range" id="rotate-slider" min="-180" max="180" step="1" value="0">
+                        <span id="rotate-val" class="sx-mono">0°</span>
+                    </div>
+                    <div class="slider-row">
+                        <span>Pan X</span>
+                        <input type="range" id="panx-slider" min="-300" max="300" step="1" value="0">
+                        <span id="panx-val" class="sx-mono">0px</span>
+                    </div>
+                    <div class="slider-row">
+                        <span>Pan Y</span>
+                        <input type="range" id="pany-slider" min="-300" max="300" step="1" value="0">
+                        <span id="pany-val" class="sx-mono">0px</span>
+                    </div>
+                </div>
+
+                <!-- 2. Mask & Canvas Size -->
+                <div class="control-group">
+                    <h3>2. Frame Mask & Canvas Size</h3>
+                    <div class="sx-field" style="margin-bottom: 1rem;">
+                        <label class="sx-label">Mask Shape</label>
+                        <div class="shape-selector">
+                            <div class="shape-btn active" data-shape="circle">Circle</div>
+                            <div class="shape-btn" data-shape="squircle">Squircle</div>
+                            <div class="shape-btn" data-shape="square">Square</div>
+                        </div>
+                    </div>
+                    <div class="slider-row">
+                        <span>Canvas Size</span>
+                        <input type="range" id="canvas-size-slider" min="200" max="1200" step="50" value="600">
+                        <span id="canvas-size-val" class="sx-mono">600px</span>
+                    </div>
+                </div>
+
+                <!-- 3. Background -->
+                <div class="control-group">
+                    <h3>3. Background & Gradient</h3>
+                    <div class="sx-grid sx-grid--2" style="margin-bottom: 1rem;">
+                        <div class="sx-field">
+                            <label class="sx-label">Solid Color</label>
+                            <input type="color" id="bg-color-picker" value="#f4f4f5" style="width: 100%; height: 42px; border: 1px solid var(--sx-line-strong); border-radius: var(--sx-radius-sm); cursor: pointer; background: #fff; padding: 2px;">
+                        </div>
+                        <div class="sx-field">
+                            <label class="sx-label">Transparent BG</label>
+                            <div class="sx-cluster" style="height: 42px;">
+                                <input type="checkbox" id="bg-transparent-chk" style="width: 20px; height: 20px; accent-color: #000;">
+                                <span style="font-size: 0.8rem; font-weight: 600;" class="sx-muted">Enable Alpha</span>
+                            </div>
+                        </div>
+                    </div>
+                    <label class="sx-label" style="margin-bottom: 0.5rem; display: block;">Gradient Presets</label>
+                    <div class="gradient-presets" id="bg-gradient-presets">
+                        <div class="gradient-chip" data-g="linear-gradient(135deg, #000000 0%, #434343 100%)" style="background: linear-gradient(135deg, #000000 0%, #434343 100%);"></div>
+                        <div class="gradient-chip" data-g="linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%)" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%);"></div>
+                        <div class="gradient-chip" data-g="linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)" style="background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);"></div>
+                        <div class="gradient-chip" data-g="linear-gradient(135deg, #fbc531 0%, #e84118 100%)" style="background: linear-gradient(135deg, #fbc531 0%, #e84118 100%);"></div>
+                        <div class="gradient-chip" data-g="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                        <div class="gradient-chip" data-g="none" style="background: #fff; border: 1px dashed var(--sx-line-strong);"></div>
+                    </div>
+                </div>
+
+                <!-- 4. Border & Padding -->
+                <div class="control-group">
+                    <h3>4. Border & Outer Padding</h3>
+                    <div class="slider-row">
+                        <span>Border Width</span>
+                        <input type="range" id="border-width-slider" min="0" max="60" step="2" value="12">
+                        <span id="border-width-val" class="sx-mono">12px</span>
+                    </div>
+                    <div class="slider-row">
+                        <span>Edge Padding</span>
+                        <input type="range" id="border-padding-slider" min="0" max="100" step="2" value="16">
+                        <span id="border-padding-val" class="sx-mono">16px</span>
+                    </div>
+                    <div class="slider-row">
+                        <span>Gradient Angle</span>
+                        <input type="range" id="border-angle-slider" min="0" max="360" step="5" value="45">
+                        <span id="border-angle-val" class="sx-mono">45°</span>
+                    </div>
+                    <label class="sx-label" style="margin-top: 1rem; margin-bottom: 0.5rem; display: block;">Border Gradient Presets</label>
+                    <div class="gradient-presets" id="border-gradient-presets">
+                        <div class="gradient-chip" data-bg1="#000000" data-bg2="#000000" style="background: #000;"></div>
+                        <div class="gradient-chip" data-bg1="#ff0844" data-bg2="#ffb199" style="background: linear-gradient(135deg, #ff0844, #ffb199);"></div>
+                        <div class="gradient-chip" data-bg1="#4facfe" data-bg2="#00f2fe" style="background: linear-gradient(135deg, #4facfe, #00f2fe);"></div>
+                        <div class="gradient-chip" data-bg1="#fa709a" data-bg2="#fee140" style="background: linear-gradient(135deg, #fa709a, #fee140);"></div>
+                        <div class="gradient-chip" data-bg1="#30cfd0" data-bg2="#330867" style="background: linear-gradient(135deg, #30cfd0, #330867);"></div>
+                        <div class="gradient-chip" data-bg1="#f77062" data-bg2="#fe5196" style="background: linear-gradient(135deg, #f77062, #fe5196);"></div>
+                    </div>
+                </div>
+
+                <!-- 5. Filters & Duotone -->
+                <div class="control-group">
+                    <h3>5. Filters & Duotone</h3>
+                    <div class="slider-row">
+                        <span>Brightness</span>
+                        <input type="range" id="filter-brightness" min="50" max="150" step="1" value="100">
+                        <span id="brightness-val" class="sx-mono">100%</span>
+                    </div>
+                    <div class="slider-row">
+                        <span>Contrast</span>
+                        <input type="range" id="filter-contrast" min="50" max="150" step="1" value="100">
+                        <span id="contrast-val" class="sx-mono">100%</span>
+                    </div>
+                    <div class="slider-row">
+                        <span>Saturation</span>
+                        <input type="range" id="filter-saturate" min="0" max="200" step="1" value="100">
+                        <span id="saturate-val" class="sx-mono">100%</span>
+                    </div>
+                    <div class="sx-cluster" style="margin-top: 1rem; gap: 0.75rem;">
+                        <button class="sx-btn sx-btn--secondary" id="filter-grayscale" style="flex:1; min-height:38px; font-size:0.8rem;">Grayscale</button>
+                        <button class="sx-btn sx-btn--secondary" id="filter-sepia" style="flex:1; min-height:38px; font-size:0.8rem;">Sepia</button>
+                        <button class="sx-btn sx-btn--secondary" id="filter-normal" style="flex:1; min-height:38px; font-size:0.8rem;">Normal</button>
+                    </div>
+                </div>
+
+                <!-- 6. Export Options -->
+                <div class="control-group">
+                    <h3>6. Export Format</h3>
+                    <div class="sx-grid sx-grid--3" style="margin-bottom: 1rem;">
+                        <button class="sx-btn sx-btn--primary export-format-btn active" data-format="png" style="min-height: 42px;">PNG</button>
+                        <button class="sx-btn sx-btn--secondary export-format-btn" data-format="jpg" style="min-height: 42px;">JPG</button>
+                        <button class="sx-btn sx-btn--secondary export-format-btn" data-format="webp" style="min-height: 42px;">WEBP</button>
+                    </div>
+                    <button class="sx-btn sx-btn--primary" id="download-btn" style="width: 100%; justify-content: center;">Download Profile Picture</button>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="sx-footer">
+        <div class="sx-container" style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="sx-mono" id="time-display">00:00:00</span>
+            <span class="sx-mono">Made by <a href="https://dewanmukto.github.io/" target="_blank" rel="noopener" style="text-decoration: underline; color: var(--sx-fg);">Dewan Mukto</a></span>
+        </div>
+    </footer>
+
+    <script>
+        // Clock updater
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('time-display').textContent = now.toTimeString().split(' ')[0];
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // State variables
+        const state = {
+            imageSrc: null,
+            imgObj: null,
+            zoom: 1,
+            rotation: 0,
+            panX: 0,
+            panY: 0,
+            shape: 'circle',
+            canvasSize: 600,
+            bgColor: '#f4f4f5',
+            bgTransparent: false,
+            bgGradient: null,
+            borderWidth: 12,
+            borderPadding: 16,
+            borderAngle: 45,
+            borderCol1: '#000000',
+            borderCol2: '#000000',
+            brightness: 100,
+            contrast: 100,
+            saturate: 100,
+            grayscale: 0,
+            sepia: 0,
+            exportFormat: 'png'
+        };
+
+        const canvas = document.getElementById('pfp-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Default placeholder initial drawing
+        function drawPlaceholder() {
+            canvas.width = state.canvasSize;
+            canvas.height = state.canvasSize;
+            
+            // Draw background
+            renderBackground();
+
+            // Draw placeholder avatar silhouette
+            ctx.save();
+            ctx.translate(canvas.width / 2 + state.panX, canvas.height / 2 + state.panY);
+            ctx.rotate((state.rotation * Math.PI) / 180);
+            ctx.scale(state.zoom, state.zoom);
+
+            ctx.fillStyle = '#e4e4e7';
+            ctx.beginPath();
+            ctx.arc(0, 40, 140, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(0, -60, 60, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            renderBorderAndMask();
+        }
+
+        function renderBackground() {
+            if (state.bgTransparent) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                return;
+            }
+            if (state.bgGradient) {
+                // Parse or render gradient
+                const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                if (state.bgGradient.includes('ff9a9e')) {
+                    grad.addColorStop(0, '#ff9a9e'); grad.addColorStop(1, '#fecfef');
+                } else if (state.bgGradient.includes('a1c4fd')) {
+                    grad.addColorStop(0, '#a1c4fd'); grad.addColorStop(1, '#c2e9fb');
+                } else if (state.bgGradient.includes('fbc531')) {
+                    grad.addColorStop(0, '#fbc531'); grad.addColorStop(1, '#e84118');
+                } else if (state.bgGradient.includes('667eea')) {
+                    grad.addColorStop(0, '#667eea'); grad.addColorStop(1, '#764ba2');
+                } else {
+                    grad.addColorStop(0, '#000000'); grad.addColorStop(1, '#434343');
+                }
+                ctx.fillStyle = grad;
+            } else {
+                ctx.fillStyle = state.bgColor;
+            }
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function getMaskPath(x, y, size) {
+            const path = new Path2D();
+            if (state.shape === 'circle') {
+                path.arc(x + size/2, y + size/2, size/2, 0, Math.PI * 2);
+            } else if (state.shape === 'squircle') {
+                // Rounded rect approximation for squircle
+                const r = size * 0.28;
+                path.roundRect(x, y, size, size, r);
+            } else {
+                // Square
+                path.rect(x, y, size, size);
+            }
+            return path;
+        }
+
+        function renderBorderAndMask() {
+            const totalSize = canvas.width;
+            const padding = state.borderPadding;
+            const innerSize = totalSize - (padding * 2);
+
+            ctx.save();
+            const maskPath = getMaskPath(padding, padding, innerSize);
+            
+            // Clip to mask for image contents
+            // Already handled during image render or applied here
+            
+            // Render Border
+            if (state.borderWidth > 0) {
+                ctx.lineWidth = state.borderWidth;
+                
+                // Compute gradient angle
+                const rad = (state.borderAngle * Math.PI) / 180;
+                const x1 = totalSize/2 - Math.cos(rad) * (totalSize/2);
+                const y1 = totalSize/2 - Math.sin(rad) * (totalSize/2);
+                const x2 = totalSize/2 + Math.cos(rad) * (totalSize/2);
+                const y2 = totalSize/2 + Math.sin(rad) * (totalSize/2);
+
+                const borderGrad = ctx.createLinearGradient(x1, y1, x2, y2);
+                borderGrad.addColorStop(0, state.borderCol1);
+                borderGrad.addColorStop(1, state.borderCol2);
+                
+                ctx.strokeStyle = borderGrad;
+                
+                const borderOffset = padding + state.borderWidth / 2;
+                const borderSize = totalSize - (borderOffset * 2);
+                const borderPath = getMaskPath(borderOffset, borderOffset, borderSize);
+                ctx.stroke(borderPath);
+            }
+            ctx.restore();
+        }
+
+        function redraw() {
+            canvas.width = state.canvasSize;
+            canvas.height = state.canvasSize;
+
+            renderBackground();
+
+            const padding = state.borderPadding + state.borderWidth;
+            const innerSize = canvas.width - (padding * 2);
+            const innerX = padding;
+            const innerY = padding;
+
+            ctx.save();
+            const maskPath = getMaskPath(innerX, innerY, innerSize);
+            ctx.clip(maskPath);
+
+            // Apply CSS filters
+            ctx.filter = `brightness(${state.brightness}%) contrast(${state.contrast}%) saturate(${state.saturate}%) grayscale(${state.grayscale}%) sepia(${state.sepia}%)`;
+
+            if (state.imgObj) {
+                ctx.save();
+                ctx.translate(canvas.width / 2 + state.panX, canvas.height / 2 + state.panY);
+                ctx.rotate((state.rotation * Math.PI) / 180);
+                ctx.scale(state.zoom, state.zoom);
+                ctx.drawImage(state.imgObj, -state.imgObj.width / 2, -state.imgObj.height / 2);
+                ctx.restore();
+            } else {
+                // Placeholder avatar
+                ctx.save();
+                ctx.translate(canvas.width / 2 + state.panX, canvas.height / 2 + state.panY);
+                ctx.rotate((state.rotation * Math.PI) / 180);
+                ctx.scale(state.zoom, state.zoom);
+
+                ctx.fillStyle = '#d4d4d8';
+                ctx.beginPath();
+                ctx.arc(0, 50, 160, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(0, -60, 70, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+            ctx.restore();
+
+            renderBorderAndMask();
+        }
+
+        // Event Listeners for UI
+        document.getElementById('image-upload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    state.imgObj = img;
+                    state.zoom = 1;
+                    document.getElementById('zoom-slider').value = 1;
+                    document.getElementById('zoom-val').textContent = '1.0x';
+                    redraw();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Zoom
+        document.getElementById('zoom-slider').addEventListener('input', (e) => {
+            state.zoom = parseFloat(e.target.value);
+            document.getElementById('zoom-val').textContent = state.zoom.toFixed(2) + 'x';
+            redraw();
+        });
+
+        // Rotation
+        document.getElementById('rotate-slider').addEventListener('input', (e) => {
+            state.rotation = parseInt(e.target.value);
+            document.getElementById('rotate-val').textContent = state.rotation + '°';
+            redraw();
+        });
+
+        // Pan X & Y
+        document.getElementById('panx-slider').addEventListener('input', (e) => {
+            state.panX = parseInt(e.target.value);
+            document.getElementById('panx-val').textContent = state.panX + 'px';
+            redraw();
+        });
+        document.getElementById('pany-slider').addEventListener('input', (e) => {
+            state.panY = parseInt(e.target.value);
+            document.getElementById('pany-val').textContent = state.panY + 'px';
+            redraw();
+        });
+
+        // Canvas Size
+        document.getElementById('canvas-size-slider').addEventListener('input', (e) => {
+            state.canvasSize = parseInt(e.target.value);
+            document.getElementById('canvas-size-val').textContent = state.canvasSize + 'px';
+            redraw();
+        });
+
+        // Shape selector
+        document.querySelectorAll('.shape-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.shape = btn.dataset.shape;
+                redraw();
+            });
+        });
+
+        // Background color & transparent
+        document.getElementById('bg-color-picker').addEventListener('input', (e) => {
+            state.bgColor = e.target.value;
+            state.bgGradient = null;
+            state.bgTransparent = false;
+            document.getElementById('bg-transparent-chk').checked = false;
+            redraw();
+        });
+        document.getElementById('bg-transparent-chk').addEventListener('change', (e) => {
+            state.bgTransparent = e.target.checked;
+            redraw();
+        });
+
+        // Background gradient presets
+        document.querySelectorAll('#bg-gradient-presets .gradient-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                state.bgGradient = chip.dataset.g === 'none' ? null : chip.dataset.g;
+                state.bgTransparent = false;
+                document.getElementById('bg-transparent-chk').checked = false;
+                redraw();
+            });
+        });
+
+        // Border sliders
+        document.getElementById('border-width-slider').addEventListener('input', (e) => {
+            state.borderWidth = parseInt(e.target.value);
+            document.getElementById('border-width-val').textContent = state.borderWidth + 'px';
+            redraw();
+        });
+        document.getElementById('border-padding-slider').addEventListener('input', (e) => {
+            state.borderPadding = parseInt(e.target.value);
+            document.getElementById('border-padding-val').textContent = state.borderPadding + 'px';
+            redraw();
+        });
+        document.getElementById('border-angle-slider').addEventListener('input', (e) => {
+            state.borderAngle = parseInt(e.target.value);
+            document.getElementById('border-angle-val').textContent = state.borderAngle + '°';
+            redraw();
+        });
+
+        // Border gradient chips
+        document.querySelectorAll('#border-gradient-presets .gradient-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                state.borderCol1 = chip.dataset.bg1;
+                state.borderCol2 = chip.dataset.bg2;
+                redraw();
+            });
+        });
+
+        // Filters
+        document.getElementById('filter-brightness').addEventListener('input', (e) => {
+            state.brightness = e.target.value;
+            document.getElementById('brightness-val').textContent = state.brightness + '%';
+            redraw();
+        });
+        document.getElementById('filter-contrast').addEventListener('input', (e) => {
+            state.contrast = e.target.value;
+            document.getElementById('contrast-val').textContent = state.contrast + '%';
+            redraw();
+        });
+        document.getElementById('filter-saturate').addEventListener('input', (e) => {
+            state.saturate = e.target.value;
+            document.getElementById('saturate-val').textContent = state.saturate + '%';
+            redraw();
+        });
+
+        document.getElementById('filter-grayscale').addEventListener('click', () => {
+            state.grayscale = 100; state.sepia = 0; redraw();
+        });
+        document.getElementById('filter-sepia').addEventListener('click', () => {
+            state.sepia = 100; state.grayscale = 0; redraw();
+        });
+        document.getElementById('filter-normal').addEventListener('click', () => {
+            state.grayscale = 0; state.sepia = 0; state.brightness = 100; state.contrast = 100; state.saturate = 100;
+            document.getElementById('filter-brightness').value = 100;
+            document.getElementById('filter-contrast').value = 100;
+            document.getElementById('filter-saturate').value = 100;
+            document.getElementById('brightness-val').textContent = '100%';
+            document.getElementById('contrast-val').textContent = '100%';
+            document.getElementById('saturate-val').textContent = '100%';
+            redraw();
+        });
+
+        // Auto background keying simulation (removes corner color similarity)
+        document.getElementById('remove-bg-btn').addEventListener('click', () => {
+            if (!state.imgObj) {
+                alert('Please upload an image first.');
+                return;
+            }
+            const tmpCanvas = document.createElement('canvas');
+            const tCtx = tmpCanvas.getContext('2d');
+            tmpCanvas.width = state.imgObj.width;
+            tmpCanvas.height = state.imgObj.height;
+            tCtx.drawImage(state.imgObj, 0, 0);
+            
+            const imgData = tCtx.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height);
+            const data = imgData.data;
+            // Sample top-left corner background color
+            const r0 = data[0], g0 = data[1], b0 = data[2];
+            
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i], g = data[i+1], b = data[i+2];
+                // Distance threshold from background color
+                const diff = Math.abs(r - r0) + Math.abs(g - g0) + Math.abs(b - b0);
+                if (diff < 45) {
+                    data[i+3] = 0; // make transparent
+                }
+            }
+            tCtx.putImageData(imgData, 0, 0);
+            const newImg = new Image();
+            newImg.onload = () => {
+                state.imgObj = newImg;
+                redraw();
+            };
+            newImg.src = tmpCanvas.toDataURL();
+        });
+
+        // Export format selection
+        document.querySelectorAll('.export-format-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.export-format-btn').forEach(b => {
+                    b.classList.remove('sx-btn--primary');
+                    b.classList.add('sx-btn--secondary');
+                });
+                btn.classList.remove('sx-btn--secondary');
+                btn.classList.add('sx-btn--primary');
+                state.exportFormat = btn.dataset.format;
+            });
+        });
+
+        // Download action
+        document.getElementById('download-btn').addEventListener('click', () => {
+            let mime = 'image/png';
+            let ext = 'png';
+            if (state.exportFormat === 'jpg') { mime = 'image/jpeg'; ext = 'jpg'; }
+            else if (state.exportFormat === 'webp') { mime = 'image/webp'; ext = 'webp'; }
+
+            const dataURL = canvas.toDataURL(mime, 0.95);
+            const link = document.createElement('a');
+            link.download = `mus-pfp-${Date.now()}.${ext}`;
+            link.href = dataURL;
+            link.click();
+        });
+
+        // Drag to pan interaction on canvas
+        let isDragging = false;
+        let startX = 0, startY = 0;
+
+        canvas.addEventListener('pointerdown', (e) => {
+            isDragging = true;
+            startX = e.clientX - state.panX;
+            startY = e.clientY - state.panY;
+            canvas.setPointerCapture(e.pointerId);
+        });
+
+        canvas.addEventListener('pointermove', (e) => {
+            if (!isDragging) return;
+            state.panX = e.clientX - startX;
+            state.panY = e.clientY - startY;
+            document.getElementById('panx-slider').value = state.panX;
+            document.getElementById('pany-slider').value = state.panY;
+            document.getElementById('panx-val').textContent = state.panX + 'px';
+            document.getElementById('pany-val').textContent = state.panY + 'px';
+            redraw();
+        });
+
+        canvas.addEventListener('pointerup', (e) => {
+            isDragging = false;
+            canvas.releasePointerCapture(e.pointerId);
+        });
+
+        // Mouse wheel zoom
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            let newZoom = state.zoom + (e.deltaY < 0 ? 0.05 : -0.05);
+            newZoom = Math.max(0.2, Math.min(3, newZoom));
+            state.zoom = newZoom;
+            document.getElementById('zoom-slider').value = state.zoom;
+            document.getElementById('zoom-val').textContent = state.zoom.toFixed(2) + 'x';
+            redraw();
+        }, { passive: false });
+
+        // Reset all
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            state.zoom = 1;
+            state.rotation = 0;
+            state.panX = 0;
+            state.panY = 0;
+            state.borderWidth = 12;
+            state.borderPadding = 16;
+            state.brightness = 100;
+            state.contrast = 100;
+            state.saturate = 100;
+            state.grayscale = 0;
+            state.sepia = 0;
+            document.getElementById('zoom-slider').value = 1;
+            document.getElementById('rotate-slider').value = 0;
+            document.getElementById('panx-slider').value = 0;
+            document.getElementById('pany-slider').value = 0;
+            document.getElementById('border-width-slider').value = 12;
+            document.getElementById('border-padding-slider').value = 16;
+            document.getElementById('filter-brightness').value = 100;
+            document.getElementById('filter-contrast').value = 100;
+            document.getElementById('filter-saturate').value = 100;
+            redraw();
+        });
+
+        // Initial render
+        drawPlaceholder();
+    </script>
+</body>
+</html>
