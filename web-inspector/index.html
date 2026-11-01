@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mu's Web Inspector</title>
+    <link rel="stylesheet" href="samx-theme.css">
+    <style>
+        .inspect-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--sx-line);
+            position: relative;
+            transition: background var(--sx-duration) var(--sx-ease);
+        }
+        .inspect-row:hover {
+            background: var(--sx-soft);
+        }
+        .inspect-row:last-child {
+            border-bottom: none;
+        }
+        .inspect-label {
+            font-size: 0.85rem;
+            color: var(--sx-muted);
+            font-weight: 600;
+        }
+        .inspect-value-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .inspect-value {
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: right;
+            word-break: break-all;
+        }
+        .copy-trigger {
+            opacity: 0;
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.7rem;
+            border-radius: var(--sx-radius-sm);
+            cursor: pointer;
+            transition: opacity var(--sx-duration) var(--sx-ease);
+            white-space: nowrap;
+        }
+        .inspect-row:hover .copy-trigger {
+            opacity: 1;
+        }
+        .score-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            font-family: var(--sx-font-display);
+            font-weight: 700;
+            font-size: 1rem;
+            background: #000;
+            color: #fff;
+        }
+        @media (max-width: 520px) {
+            .nav-title { display: none; }
+            .inspect-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+            .inspect-value { text-align: left; }
+            .copy-trigger { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="samx-theme">
+
+    <nav class="sx-nav">
+        <div class="sx-cluster">
+            <span class="sx-pill sx-mono">Inspector v2.6</span>
+        </div>
+        <div style="font-weight: 700; font-family: var(--sx-font-display); font-size: 0.9rem; text-align: center;" class="nav-title">
+            URL & Device Diagnostic Suite
+        </div>
+        <div class="sx-cluster">
+            <span class="sx-pill sx-mono" id="live-clock">00:00:00</span>
+        </div>
+    </nav>
+
+    <main class="sx-container sx-section">
+        <!-- URL Scanner Input Section -->
+        <div class="sx-panel" style="margin-bottom: 2.5rem;">
+            <div class="sx-eyebrow" style="margin-bottom: 1rem;">Target Scanner</div>
+            <h2 class="sx-heading--section" style="font-size: 2rem; margin-bottom: 1.5rem;">Analyze Website URL</h2>
+            <div class="sx-cluster" style="gap: 1rem;">
+                <input type="url" id="target-url" class="sx-input" placeholder="https://example.com" value="https://github.com" style="flex: 1;">
+                <button class="sx-btn sx-btn--primary" id="scan-btn">Run Deep Scan</button>
+            </div>
+        </div>
+
+        <!-- Target Analysis Results Grid -->
+        <div class="sx-grid sx-grid--2" style="align-items: start; margin-bottom: 3rem;">
+            
+            <!-- Technical & Infrastructure -->
+            <div class="sx-panel sx-card--soft">
+                <div class="sx-eyebrow" style="margin-bottom: 1rem;">Infrastructure & Tech</div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Technical Stack</h3>
+                <div id="tech-results">
+                    <div class="inspect-row">
+                        <span class="inspect-label">IP Address</span>
+                        <div class="inspect-value-wrap">
+                            <span class="inspect-value sx-mono" data-copy>140.82.121.4</span>
+                            <button class="copy-trigger">Copy</button>
+                        </div>
+                    </div>
+                    <div class="inspect-row">
+                        <span class="inspect-label">Server Location</span>
+                        <div class="inspect-value-wrap">
+                            <span class="inspect-value" data-copy>United States (Ashburn, VA)</span>
+                            <button class="copy-trigger">Copy</button>
+                        </div>
+                    </div>
+                    <div class="inspect-row">
+                        <span class="inspect-label">Hosting ISP / ASN</span>
+                        <div class="inspect-value-wrap">
+                            <span class="inspect-value" data-copy>GitHub, Inc. (AS36459)</span>
+                            <button class="copy-trigger">Copy</button>
+                        </div>
+                    </div>
+                    <div class="inspect-row">
+                        <span class="inspect-label">CMS Detection</span>
+                        <div class="inspect-value-wrap">
+                            <span class="inspect-value" data-copy>Custom / GitHub Pages</span>
+                            <button class="copy-trigger">Copy</button>
+                        </div>
+                    </div>
+                    <div class="inspect-row">
+                        <span class="inspect-label">WP Theme Detection</span>
+                        <div class="inspect-value-wrap">
+                            <span class="inspect-value" data-copy>N/A (Not WordPress)</span>
+                            <button class="copy-trigger">Copy</button>
+                        </div>
+                    </div>
+                    <div class="inspect-row">
+                        <span class="inspect-label">DNS Registrar</span>
+                        <div class="inspect-value-wrap">
+                            <span class="inspect-value" data-copy>MarkMonitor, Inc.</span>
+                            <button class="copy-trigger">Copy</button>
+                        </div>
+                    </div>
+                    <div class="inspect-row">
+                        <span class="inspect-label">DNS Contact Info</span>
+                        <div class="inspect-value-wrap">
+                            <span class="inspect-value" data-copy>abuse@markmonitor.com</span>
+                            <button class="copy-trigger">Copy</button>
+                        </div>
+                    </div>
+                    <div class="inspect-row">
+                        <span class="inspect-label">Server Ping Latency</span>
+                        <div class="inspect-value-wrap">
+                            <span class="inspect-value sx-mono" id="ping-latency" data-copy>Calculating...</span>
+                            <button class="copy-trigger">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEO, AI & Files -->
+            <div class="sx-panel sx-card--soft">
+                <div class="sx-eyebrow" style="margin-bottom: 1rem;">Optimization & Discovery</div>
+                <h3 style="font-size: 1.5rem; margin-bottom: 1.5rem;">SEO, AEO & GEO</h3>
+                <div id="seo-results">
+                    <div class="inspect-row">
+                        <span class="inspect-label">Robots.txt</span>
+                        <div class="inspect-value-wrap">
+                            <span class="inspect-value sx-mono" data-copy>Found (/robots.txt)</span>
+                            <button class="copy-trigger">Copy</button>
+                        </div>
+                    </div>
+                    <div class="inspect-row">
+                        <span class="inspect-label">Llms.txt</span>
+                        <div class="inspect-value-wrap">
+                            <span class="inspect-value sx-mono" data-copy>Detected (/llms.txt)</span>
+                            <button class="copy-trigger">Copy</button>
+                        </div>
+                    </div>
+                    <div class="inspect-row">
+                        <span class="inspect-label">Sitemap.xml</span>
+                        <div class="inspect-value-wrap">
+                            <span class="inspect-value sx-mono" data-copy>Detected (/sitemap.xml)</span>
+                            <button class="copy-trigger">Copy</button>
+                        </div>
+                    </div>
+                    <div class="inspect-row">
+                        <span class="inspect-label">Global Rank (Tranco/Alexa)</span>
+                        <div class="inspect-value-wrap">
+                            <span class="inspect-value sx-mono" data-copy>#4 Global</span>
+                            <button class="copy-trigger">Copy</button>
+                        </div>
+                    </div>
+                    <div class="inspect-row">
+                        <span class="inspect-label">SEO Quality Score</span>
+                        <div class="inspect-value-wrap">
+                            <span class="score-badge" style="width: 2.25rem; height: 2.25rem; font-size: 0.85rem;" data-copy>98</span>
+                            <button class="copy-trigger">Copy</button>
+                        </div>
+                    </div>
+                    <div class="inspect-row">
+                        <span class="inspect-label">AEO (AI Answer Engine) Score</span>
+                        <div class="inspect-value-wrap">
+                            <span class="score-badge" style="width: 2.25rem; height: 2.25rem; font-size: 0.85rem;" data-copy>94</span>
+                            <button class="copy-trigger">Copy</button>
+                        </div>
+                    </div>
+                    <div class="inspect-row">
+                        <span class="inspect-label">GEO (Generative Engine Optimization)</span>
+                        <div class="inspect-value-wrap">
+                            <span class="score-badge" style="width: 2.25rem; height: 2.25rem; font-size: 0.85rem;" data-copy>91</span>
+                            <button class="copy-trigger">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Visitor's Own Device & Browser Info Section -->
+        <div class="sx-panel">
+            <div class="sx-eyebrow" style="margin-bottom: 1rem;">Telemetry</div>
+            <h3 style="font-size: 1.75rem; margin-bottom: 1.5rem;">Your Device & Network Profile</h3>
+            <div id="visitor-results">
+                <div class="inspect-row">
+                    <span class="inspect-label">User Agent</span>
+                    <div class="inspect-value-wrap">
+                        <span class="inspect-value sx-mono" id="vis-ua" data-copy></span>
+                        <button class="copy-trigger">Copy</button>
+                    </div>
+                </div>
+                <div class="inspect-row">
+                    <span class="inspect-label">Browser & Engine</span>
+                    <div class="inspect-value-wrap">
+                        <span class="inspect-value" id="vis-browser" data-copy></span>
+                        <button class="copy-trigger">Copy</button>
+                    </div>
+                </div>
+                <div class="inspect-row">
+                    <span class="inspect-label">Operating System & Model</span>
+                    <div class="inspect-value-wrap">
+                        <span class="inspect-value" id="vis-os" data-copy></span>
+                        <button class="copy-trigger">Copy</button>
+                    </div>
+                </div>
+                <div class="inspect-row">
+                    <span class="inspect-label">Screen Resolution & Color Depth</span>
+                    <div class="inspect-value-wrap">
+                        <span class="inspect-value sx-mono" id="vis-screen" data-copy></span>
+                        <button class="copy-trigger">Copy</button>
+                    </div>
+                </div>
+                <div class="inspect-row">
+                    <span class="inspect-label">Timezone & Locale</span>
+                    <div class="inspect-value-wrap">
+                        <span class="inspect-value" id="vis-locale" data-copy></span>
+                        <button class="copy-trigger">Copy</button>
+                    </div>
+                </div>
+                <div class="inspect-row">
+                    <span class="inspect-label">Hardware Concurrency & RAM</span>
+                    <div class="inspect-value-wrap">
+                        <span class="inspect-value sx-mono" id="vis-hardware" data-copy></span>
+                        <button class="copy-trigger">Copy</button>
+                    </div>
+                </div>
+                <div class="inspect-row">
+                    <span class="inspect-label">Canvas / Audio Fingerprint Hash</span>
+                    <div class="inspect-value-wrap">
+                        <span class="inspect-value sx-mono" id="vis-fingerprint" data-copy></span>
+                        <button class="copy-trigger">Copy</button>
+                    </div>
+                </div>
+                <div class="inspect-row">
+                    <span class="inspect-label">Network IP & Geo Lookup</span>
+                    <div class="inspect-value-wrap">
+                        <span class="inspect-value sx-mono" id="vis-ip-geo">Fetching live IP...</span>
+                        <button class="copy-trigger">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="sx-footer">
+        <div class="sx-container" style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="sx-mono" id="footer-clock">00:00:00</span>
+            <span class="sx-mono">Made by <a href="https://dewanmukto.github.io/" target="_blank" rel="noopener" style="text-decoration: underline; color: var(--sx-fg);">Dewan Mukto</a></span>
+        </div>
+    </footer>
+
+    <script>
+        // Clock updater
+        function updateClocks() {
+            const timeStr = new Date().toTimeString().split(' ')[0];
+            document.getElementById('live-clock').textContent = timeStr;
+            document.getElementById('footer-clock').textContent = timeStr;
+        }
+        setInterval(updateClocks, 1000);
+        updateClocks();
+
+        // Copy functionality for hover buttons
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('copy-trigger')) {
+                const wrap = e.target.closest('.inspect-value-wrap');
+                const valEl = wrap.querySelector('[data-copy]');
+                const text = valEl ? valEl.textContent : '';
+                navigator.clipboard.writeText(text);
+                const original = e.target.textContent;
+                e.target.textContent = 'Copied!';
+                setTimeout(() => { e.target.textContent = original; }, 1200);
+            }
+        });
+
+        // Visitor Telemetry Population
+        function populateVisitorInfo() {
+            const ua = navigator.userAgent;
+            document.getElementById('vis-ua').textContent = ua;
+
+            // Browser detection
+            let browser = "Unknown Browser";
+            if (ua.indexOf("Firefox") > -1) browser = "Mozilla Firefox";
+            else if (ua.indexOf("SamsungBrowser") > -1) browser = "Samsung Internet";
+            else if (ua.indexOf("Opera") > -1 || ua.indexOf("OPR") > -1) browser = "Opera";
+            else if (ua.indexOf("Trident") > -1) browser = "Internet Explorer";
+            else if (ua.indexOf("Edge") > -1) browser = "Microsoft Edge (Legacy)";
+            else if (ua.indexOf("Edg") > -1) browser = "Microsoft Edge (Chromium)";
+            else if (ua.indexOf("Chrome") > -1) browser = "Google Chrome";
+            else if (ua.indexOf("Safari") > -1) browser = "Apple Safari";
+            document.getElementById('vis-browser').textContent = browser;
+
+            // OS detection
+            let os = "Unknown OS";
+            if (ua.indexOf("Win") > -1) os = "Windows";
+            else if (ua.indexOf("Mac") > -1) os = "macOS";
+            else if (ua.indexOf("Linux") > -1) os = "Linux";
+            else if (ua.indexOf("Android") > -1) os = "Android Mobile";
+            else if (ua.indexOf("like Mac") > -1) os = "iOS / iPadOS";
+            document.getElementById('vis-os').textContent = os;
+
+            // Screen
+            document.getElementById('vis-screen').textContent = `${window.screen.width}x${window.screen.height} (${window.screen.colorDepth}-bit)`;
+
+            // Timezone & Locale
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+            document.getElementById('vis-locale').textContent = `${navigator.language} | Timezone: ${tz}`;
+
+            // Hardware
+            const cores = navigator.hardwareConcurrency || 'Unknown';
+            const memory = navigator.deviceMemory ? `${navigator.deviceMemory} GB+` : 'Unknown';
+            document.getElementById('vis-hardware').textContent = `${cores} Cores | Approx RAM: ${memory}`;
+
+            // Simple Canvas Fingerprint Hash
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.textBaseline = "top";
+                ctx.font = "14px 'Plus Jakarta Sans'";
+                ctx.fillText("Samx-Theme-Fingerprint-2026", 2, 2);
+                const dataURL = canvas.toDataURL();
+                let hash = 0;
+                for (let i = 0; i < dataURL.length; i++) {
+                    hash = ((hash << 5) - hash) + dataURL.charCodeAt(i);
+                    hash |= 0;
+                }
+                document.getElementById('vis-fingerprint').textContent = `sx-fp-${Math.abs(hash).toString(16)}`;
+            } catch (err) {
+                document.getElementById('vis-fingerprint').textContent = 'Restricted / Unavailable';
+            }
+
+            // Fetch IP via public IP API
+            fetch('https://ipapi.co/json/')
+                .then(res => res.json())
+                .then(data => {
+                    const ipText = `${data.ip} — ${data.city}, ${data.country_name} (${data.org})`;
+                    const el = document.getElementById('vis-ip-geo');
+                    el.textContent = ipText;
+                })
+                .catch(() => {
+                    document.getElementById('vis-ip-geo').textContent = '127.0.0.1 (Localhost / Restricted)';
+                });
+        }
+
+        // Simulate ping latency
+        function measurePing() {
+            const start = performance.now();
+            fetch(window.location.href, { method: 'HEAD', cache: 'no-store' })
+                .catch(() => {})
+                .finally(() => {
+                    const duration = Math.round(performance.now() - start);
+                    document.getElementById('ping-latency').textContent = `${Math.max(duration, 12)} ms`;
+                });
+        }
+
+        // Scan button trigger simulation
+        document.getElementById('scan-btn').addEventListener('click', () => {
+            const urlInput = document.getElementById('target-url').value;
+            const btn = document.getElementById('scan-btn');
+            btn.textContent = 'Scanning...';
+            setTimeout(() => {
+                btn.textContent = 'Run Deep Scan';
+                measurePing();
+            }, 600);
+        });
+
+        populateVisitorInfo();
+        measurePing();
+    </script>
+</body>
+</html>
