@@ -82,7 +82,7 @@
 
     <nav class="sx-nav">
         <div class="sx-cluster">
-            <span class="sx-pill sx-mono">Generator v2.0</span>
+            <span class="sx-pill sx-mono">Generator v2.1</span>
         </div>
         <div style="font-weight: 700; font-family: var(--sx-font-display); font-size: 0.9rem; text-align: center;" class="nav-title">
             Mu's Cover Letter Generator
@@ -103,19 +103,19 @@
                 <div class="sx-stack" style="gap: 1.25rem;">
                     <div class="sx-field">
                         <label class="sx-label">Your Full Name</label>
-                        <input type="text" id="input-name" class="sx-input" placeholder="e.g. Dewan Mukto" value="Dewan Mukto">
+                        <input type="text" id="input-name" class="sx-input" placeholder="e.g. Alex Morgan" value="">
                     </div>
                     <div class="sx-field">
                         <label class="sx-label">Target Job Title</label>
-                        <input type="text" id="input-title" class="sx-input" placeholder="e.g. Software Engineer">
+                        <input type="text" id="input-title" class="sx-input" placeholder="e.g. Software Engineer" value="">
                     </div>
                     <div class="sx-field">
                         <label class="sx-label">Company Name</label>
-                        <input type="text" id="input-company" class="sx-input" placeholder="e.g. Acme Corp">
+                        <input type="text" id="input-company" class="sx-input" placeholder="e.g. Acme Corp" value="">
                     </div>
                     <div class="sx-field">
                         <label class="sx-label">Job Location</label>
-                        <input type="text" id="input-location" class="sx-input" placeholder="e.g. San Francisco, CA">
+                        <input type="text" id="input-location" class="sx-input" placeholder="e.g. San Francisco, CA" value="">
                     </div>
                     
                     <!-- Single-Choice Job Type -->
@@ -130,27 +130,27 @@
 
                     <div class="sx-field">
                         <label class="sx-label">Years of Experience</label>
-                        <input type="text" id="input-exp" class="sx-input" placeholder="e.g. 3+ years">
+                        <input type="text" id="input-exp" class="sx-input" placeholder="e.g. 3+ years" value="">
                     </div>
                     <div class="sx-field">
                         <label class="sx-label">Main Skills</label>
-                        <input type="text" id="input-skills" class="sx-input" placeholder="e.g. JavaScript, Python, System Architecture">
+                        <input type="text" id="input-skills" class="sx-input" placeholder="e.g. JavaScript, Python, System Architecture" value="">
                     </div>
                     <div class="sx-field">
                         <label class="sx-label">Portfolio Project Type (Optional)</label>
-                        <input type="text" id="input-project" class="sx-input" placeholder="e.g. an AI-powered SaaS platform">
+                        <input type="text" id="input-project" class="sx-input" placeholder="e.g. an AI-powered SaaS platform" value="">
                     </div>
                     <div class="sx-field">
                         <label class="sx-label">Achievement (Optional)</label>
-                        <input type="text" id="input-achievement" class="sx-input" placeholder="e.g. scaling application performance by 40%">
+                        <input type="text" id="input-achievement" class="sx-input" placeholder="e.g. scaling application performance by 40%" value="">
                     </div>
                     <div class="sx-field">
                         <label class="sx-label">Recent Academic Degree</label>
-                        <input type="text" id="input-degree" class="sx-input" placeholder="e.g. B.Sc. in Computer Science">
+                        <input type="text" id="input-degree" class="sx-input" placeholder="e.g. B.Sc. in Computer Science" value="">
                     </div>
                     <div class="sx-field">
                         <label class="sx-label">Institute Name</label>
-                        <input type="text" id="input-institute" class="sx-input" placeholder="e.g. University of Technology">
+                        <input type="text" id="input-institute" class="sx-input" placeholder="e.g. University of Technology" value="">
                     </div>
 
                     <!-- Social / Professional Links Management -->
@@ -255,16 +255,50 @@
             institute: document.getElementById('input-institute')
         };
 
-        // Preloaded default links as requested
-        let customLinks = [
-            { name: 'CV / Resume link', url: 'https://dewanmukto.github.io/resume_cs.pdf' },
-            { name: 'Portfolio website link', url: 'https://dewanmukto.github.io/' },
-            { name: 'GitHub profile link', url: 'https://github.com/dwmk' },
-            { name: 'LinkedIn profile link', url: 'https://www.linkedin.com/in/dewanmukto' }
-        ];
+        let customLinks = [];
 
         const outputEl = document.getElementById('letter-output');
         const linksContainer = document.getElementById('links-container');
+
+        // Load persistent state from localStorage
+        function loadStorage() {
+            const savedData = localStorage.getItem('mus_cover_letter_data');
+            if (savedData) {
+                try {
+                    const parsed = JSON.parse(savedData);
+                    if (parsed.fields) {
+                        for (let k in parsed.fields) {
+                            if (fields[k]) fields[k].value = parsed.fields[k];
+                        }
+                    }
+                    if (parsed.jobType) {
+                        jobType = parsed.jobType;
+                        document.querySelectorAll('.job-type-btn').forEach(b => {
+                            const match = b.dataset.val === jobType;
+                            b.classList.toggle('sx-btn--primary', match);
+                            b.classList.toggle('sx-btn--secondary', !match);
+                        });
+                    }
+                    if (parsed.customLinks) {
+                        customLinks = parsed.customLinks;
+                    }
+                } catch(e) {}
+            }
+        }
+
+        // Save persistent state to localStorage
+        function saveStorage() {
+            const fieldValues = {};
+            for (let k in fields) {
+                fieldValues[k] = fields[k].value;
+            }
+            const data = {
+                fields: fieldValues,
+                jobType: jobType,
+                customLinks: customLinks
+            };
+            localStorage.setItem('mus_cover_letter_data', JSON.stringify(data));
+        }
 
         function renderLinksList() {
             linksContainer.innerHTML = customLinks.map((l, index) => `
@@ -273,6 +307,7 @@
                     <button type="button" class="sx-btn sx-btn--secondary" style="min-height: 26px; padding: 0.15rem 0.5rem; font-size: 0.7rem;" onclick="removeLink(${index})">Remove</button>
                 </div>
             `).join('');
+            saveStorage();
             updatePreview();
         }
 
@@ -291,6 +326,7 @@
                 btn.classList.remove('sx-btn--secondary');
                 btn.classList.add('sx-btn--primary');
                 jobType = btn.dataset.val;
+                saveStorage();
                 updatePreview();
             });
         });
@@ -329,6 +365,7 @@ ${name}`;
 
         function updatePreview() {
             outputEl.textContent = generateLetterText();
+            saveStorage();
         }
 
         Object.values(fields).forEach(el => {
@@ -432,22 +469,18 @@ ${name}`;
 
         // Reset
         document.getElementById('reset-btn').addEventListener('click', () => {
+            localStorage.removeItem('mus_cover_letter_data');
             Object.values(fields).forEach(el => el.value = '');
-            fields.name.value = 'Dewan Mukto';
             jobType = 'Remote';
             document.querySelectorAll('.job-type-btn').forEach((b, idx) => {
                 b.classList.toggle('sx-btn--primary', idx === 0);
                 b.classList.toggle('sx-btn--secondary', idx !== 0);
             });
-            customLinks = [
-                { name: 'CV / Resume link', url: 'https://dewanmukto.github.io/resume_cs.pdf' },
-                { name: 'Portfolio website link', url: 'https://dewanmukto.github.io/' },
-                { name: 'GitHub profile link', url: 'https://github.com/dwmk' },
-                { name: 'LinkedIn profile link', url: 'https://www.linkedin.com/in/dewanmukto' }
-            ];
+            customLinks = [];
             renderLinksList();
         });
 
+        loadStorage();
         renderLinksList();
     </script>
 </body>
